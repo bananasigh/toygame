@@ -155,6 +155,7 @@ public class DodgeGame extends Canvas implements Runnable{
 			blueY.push(y+speed);
 		}
 	}
+	// Surabi loves Benedict Cumberbatch
 
 	public void makeEnemies(Graphics g){
 		redX.add((int)(Math.random()*900));
