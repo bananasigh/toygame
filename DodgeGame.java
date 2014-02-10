@@ -7,7 +7,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.Stack;
+import java.util.ArrayList;
 
 /**
  * DodgeGame
@@ -21,18 +21,18 @@ public class DodgeGame extends Canvas implements Runnable{
 
 	public int xPos = 500;
 	public int yPos = 500;
+	public ArrayList<Enemy> redEnemies= new ArrayList<Enemy>();
+	public ArrayList<Enemy> blueEnemies= new ArrayList<Enemy>();
+
+	public double maxSpeed=20;
+
+	private Enemy initRedEnemy;
+
+	private int count=0;
+	private Enemy redEnemy;
+	private Enemy blueEnemy;
 
 	public static Thread myThread;
-
-	Stack<Integer> redX = new Stack();
-	Stack<Integer> redY = new Stack();
-	Stack<Integer> redSpeed = new Stack();
-
-	Stack<Integer> blueX = new Stack();
-	Stack<Integer> blueY = new Stack();
-	Stack<Integer> blueSpeed = new Stack();	
-
-	int MaxSpeed = 30;
 
 	/**
 	 * This main method instantiates a frame, canvas, and adds a window listener to close the window.
@@ -54,6 +54,7 @@ public class DodgeGame extends Canvas implements Runnable{
 		myF.setVisible(true);
 
 		myThread.start();
+
 	}
 
 
@@ -88,85 +89,84 @@ public class DodgeGame extends Canvas implements Runnable{
 			}
 		});
 
+		//the initial red enemy guy
+		initRedEnemy = new Enemy((int)(300), (int)(300), (int)(Math.random()*maxSpeed), true);
+		redEnemies.add(initRedEnemy);
+		
 	}
 
 	public void update(Graphics g){
 		paint(g);
 	}
-	boolean draw = true;
+
 	public void paint(Graphics g){
 		g.clearRect(0, 0, 1000, 1000);
 
+		//player's rectangle guy
 		g.setColor(Color.magenta);
 		g.fillRect(xPos, yPos, width,height);	
-		g.setColor(Color.black);
-		g.fillRect(600, 500, width,height);	
 
-		makeEnemies(g);
 
-		if(draw){
-			drawRed(g);
-			drawBlue(g);
-			draw = !draw;
-		}
-		if(!(xPos == 600 && yPos == 500)){
-			g.setColor(Color.black);
-			g.fillRect(600, 500, width,height);	
-		}
+		//draws red horizontal enemies
+		for (int i = 0; i<redEnemies.size(); i++){
+			redEnemy = redEnemies.get(i);
 
-	}
-
-	public void drawRed(Graphics g){
-		int initX=redX.peek();
-		g.setColor(Color.red);
-		int x =0;
-		int y =0;
-		while(redX.peek()!=initX+3){			
-			if(!redX.isEmpty()){
-				x=redX.pop();
+			//clears past position
+			g.setColor(Color.white);
+			g.fillRect(redEnemy.getXPos(), redEnemy.getYPos(), width,height);
+			
+			//if it reaches a border it switches direction
+			if(redEnemy.getXPos()>=930 || redEnemy.getXPos()<=0){
+				redEnemy.setDirection(!redEnemy.getDirection());
 			}
-			if(!redY.isEmpty()){
-				y=redY.pop();
+			if (redEnemy.getDirection()){
+				redEnemy.setXPos(redEnemy.getXPos()+redEnemy.getSpeed()); //moves the box in the current direction
 			}
-			int speed = redSpeed.pop();//TODO: Add method that adds to speed stack
-			int xPos = x+speed;
-			int yPos = speed;
+			else {
+				redEnemy.setXPos(redEnemy.getXPos()-redEnemy.getSpeed());
+			}
+
+			//draws the box at the new position
 			g.setColor(Color.red);
-			g.fillRect(xPos, yPos, width, height);
-			
-			redX.push(xPos);
-			redY.push(yPos);
-	//		redSpeed.push((speed));
-		//	g.setColor(Color.white);
-			//g.fillRect(xPos, yPos, width, height);
-			
-		}
-	}
+			g.fillRect(redEnemy.getXPos(), redEnemy.getYPos(), width,height);	
 
-	public void drawBlue(Graphics g){
-		int initX = blueX.peek();
-		g.setColor(Color.blue);
-		while(blueX.peek()!=initX+3){
-			int x=blueX.pop();
-			int y=blueY.pop();
-			int speed = blueSpeed.pop();
-			g.fillRect(x+speed, y+speed, width, height);
-			blueX.push(x+speed);
-			blueY.push(y+speed);
 		}
-	}
-	// Hannah is a liar liar pants on fire
 
-	public void makeEnemies(Graphics g){
-		redX.add((int)(Math.random()*900));
-		redY.add((int)(Math.random()*900));
-		redSpeed.add((int)(Math.random()*MaxSpeed));
 		
-		blueX.add((int)(Math.random()*900));
-		blueY.add((int)(Math.random()*900));
-		blueSpeed.add((int)(Math.random()*MaxSpeed));
-	}
+		//draws blue vertical enemies
+		for (int j = 0; j<blueEnemies.size(); j++){
+			blueEnemy = blueEnemies.get(j);
 
+			g.setColor(Color.white);
+			g.fillRect(blueEnemy.getXPos(), blueEnemy.getYPos(), width,height);
+	
+			if(blueEnemy.getYPos()>=930 || blueEnemy.getYPos()<=0){
+				blueEnemy.setDirection(!blueEnemy.getDirection());
+			}
+			if (blueEnemy.getDirection()){
+				blueEnemy.setYPos(blueEnemy.getYPos()+blueEnemy.getSpeed());
+			}
+			else {
+				blueEnemy.setYPos(blueEnemy.getYPos()-blueEnemy.getSpeed());
+			}
+	
+			g.setColor(Color.blue);
+			g.fillRect(blueEnemy.getXPos(), blueEnemy.getYPos(), width,height);		
+
+		}
+		
+
+		//creates new enemy every 50 iterations (alternates whether red or blue enemy is born)
+		if((count+1)%50 ==0 && (count+1)%100 != 0){
+			blueEnemies.add(new Enemy((int)(Math.random()*900), (int)(Math.random()*900), (int)(Math.random()*maxSpeed), true));
+		}
+		if((count+1)%100 ==0){
+			redEnemies.add(new Enemy((int)(Math.random()*900), (int)(Math.random()*900), (int)(Math.random()*maxSpeed), true));
+		}
+		count ++;
+
+		maxSpeed= maxSpeed+.01;
+	}
 
 	/**
 	 * This method runs the current thread, but pauses for 100 ms every cycle.
@@ -183,3 +183,24 @@ public class DodgeGame extends Canvas implements Runnable{
 	}
 
 }
+
+
+
+
+
+//OLD CODE -- Just in Case!
+//g.setColor(Color.white);
+//g.fillRect(blueEnemy.getXPos(), blueEnemy.getYPos(), width,height);
+//
+//if(blueEnemy.getYPos()>=930 || blueEnemy.getYPos()<=30){
+//	direction = !direction;
+//}
+//if (direction){
+//	blueEnemy.setYPos(blueEnemy.getYPos()+blueEnemy.getSpeed());
+//}
+//else {
+//	blueEnemy.setYPos(blueEnemy.getYPos()-blueEnemy.getSpeed());
+//}
+//
+//g.setColor(Color.blue);
+//g.fillRect(blueEnemy.getXPos(), blueEnemy.getYPos(), width,height);	
